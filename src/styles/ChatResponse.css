@@ -175,6 +175,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95em;
+  table-layout: auto;
 }
 
 .data-table thead {
@@ -187,12 +188,21 @@
   font-weight: 600;
   color: #333;
   border-bottom: 2px solid #667eea;
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .data-table td {
   padding: 12px 16px;
   border-bottom: 1px solid #e0e0e0;
   color: #555;
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 200px;
 }
 
 .data-table tbody tr:hover {
@@ -226,6 +236,30 @@
   color: #555;
   line-height: 1.6;
   margin: 0;
+}
+
+.section-text p {
+  margin: 8px 0;
+}
+
+.section-text ul {
+  margin: 8px 0;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.section-text li {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+
+.section-text strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.section-text em {
+  font-style: italic;
 }
 
 /* Responsive Design */

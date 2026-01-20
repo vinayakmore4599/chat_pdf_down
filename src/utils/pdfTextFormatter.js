@@ -4,6 +4,61 @@
  */
 
 /**
+ * Common emoji replacements for PDF rendering
+ * jsPDF doesn't support emoji rendering, so we replace them with text
+ */
+const EMOJI_REPLACEMENTS = {
+  '💼': '[Briefcase] ',
+  '🎯': '[Target] ',
+  '📊': '[Chart] ',
+  '📈': '[Trending Up] ',
+  '📉': '[Trending Down] ',
+  '✅': '[Check] ',
+  '❌': '[X] ',
+  '⚠️': '[Warning] ',
+  '💡': '[Idea] ',
+  '🔍': '[Search] ',
+  '📝': '[Note] ',
+  '🚀': '[Rocket] ',
+  '⭐': '[Star] ',
+  '👍': '[Thumbs Up] ',
+  '👎': '[Thumbs Down] ',
+  '🔥': '[Fire] ',
+  '💰': '[Money] ',
+  '📱': '[Phone] ',
+  '💻': '[Computer] ',
+  '🌟': '[Star] ',
+  '📅': '[Calendar] ',
+  '🎉': '[Party] ',
+  '⏰': '[Clock] ',
+  '📧': '[Email] ',
+  '🔔': '[Bell] ',
+  '📌': '[Pin] ',
+  '📑': '[Document] ',
+  '🥧': '[Pie] ',
+  '📐': '[Ruler] ',
+  '🏆': '[Trophy] ',
+  '✍️': '[Writing] ',
+  '📋': '[Clipboard] ',
+  '🗺️': '[Map] ',
+};
+
+/**
+ * Replace emojis with text equivalents for PDF rendering
+ */
+export const replaceEmojisForPDF = (text) => {
+  if (!text) return text;
+  let result = text;
+  Object.keys(EMOJI_REPLACEMENTS).forEach(emoji => {
+    result = result.split(emoji).join(EMOJI_REPLACEMENTS[emoji]);
+  });
+  // Remove any remaining emojis (fallback for unlisted ones)
+  // Emoji regex pattern - removes most emoji characters
+  result = result.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '');
+  return result;
+};
+
+/**
  * Text formatting object structure
  * {
  *   text: "string content",
@@ -25,10 +80,12 @@
  *   Line breaks with \n
  */
 export const parseFormattedText = (text) => {
+  // Replace emojis before processing
+  const cleanText = replaceEmojisForPDF(text);
   const segments = [];
 
   // Split by newlines first
-  const lines = text.split('\n');
+  const lines = cleanText.split('\n');
 
   lines.forEach((line) => {
     if (!line.trim()) {
@@ -36,9 +93,28 @@ export const parseFormattedText = (text) => {
       return;
     }
 
-    // Check for bullet point
-    const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
-    let content = isBullet ? line.replace(/^[\s•\-]+/, '') : line;
+    // Check for bullet point and determine indent level
+    const hasTab = line.startsWith('\t');
+    const trimmed = line.trim();
+    
+    // Check if it's a numbered list (1., 2., etc.) - these should NOT be treated as bullets
+    const isNumberedList = /^\d+\.\s/.test(trimmed);
+    
+    // Only treat as bullet if it starts with bullet markers AND is not a numbered list
+    const isBullet = !isNumberedList && (trimmed.startsWith('•') || trimmed.startsWith('-') || (trimmed.startsWith('*') && !trimmed.startsWith('**')));
+    
+    // Determine indent: sub-bullets (with tabs) get more indent
+    let indentLevel = 0;
+    if (isBullet) {
+      if (hasTab) {
+        indentLevel = 20; // Sub-bullet indent (increased for better visibility)
+      } else {
+        indentLevel = 8;  // Main bullet indent
+      }
+    }
+    
+    // Remove bullet marker and clean content
+    let content = isBullet ? trimmed.replace(/^[•\-*]\s*/, '') : line;
 
     // Parse inline formatting
     const inlineSegments = parseInlineFormatting(content.trim());
@@ -47,7 +123,8 @@ export const parseFormattedText = (text) => {
       segments.push({
         ...seg,
         isBullet: isBullet && idx === 0,
-        indent: isBullet ? 5 : 0,
+        indent: indentLevel,
+        isSubBullet: hasTab && isBullet,
       });
     });
 
@@ -59,6 +136,7 @@ export const parseFormattedText = (text) => {
 
 /**
  * Parse inline formatting: **bold** and *italic*
+ * Preserves emojis and special Unicode symbols
  */
 const parseInlineFormatting = (text) => {
   const segments = [];
@@ -68,6 +146,22 @@ const parseInlineFormatting = (text) => {
   let i = 0;
 
   while (i < text.length) {
+    // Check for ***bold+italic*** (must check this before ** and *)
+    if (text.substring(i, i + 3) === '***') {
+      if (currentText) {
+        segments.push({
+          text: currentText,
+          bold: isBold,
+          italic: isItalic,
+        });
+        currentText = '';
+      }
+      isBold = !isBold;
+      isItalic = !isItalic;
+      i += 3;
+      continue;
+    }
+    
     // Check for **bold**
     if (text.substring(i, i + 2) === '**') {
       if (currentText) {
@@ -83,8 +177,8 @@ const parseInlineFormatting = (text) => {
       continue;
     }
 
-    // Check for *italic* (but not **)
-    if (text[i] === '*' && text[i + 1] !== '*') {
+    // Check for *italic* (but not ** or ***)
+    if (text[i] === '*' && text[i + 1] !== '*' && text[i - 1] !== '*') {
       if (currentText) {
         segments.push({
           text: currentText,
@@ -98,6 +192,7 @@ const parseInlineFormatting = (text) => {
       continue;
     }
 
+    // Preserve all characters including emojis and special symbols
     currentText += text[i];
     i += 1;
   }
@@ -132,8 +227,9 @@ export const addFormattedText = (pdf, segments, xPosition, yPosition, maxWidth, 
 
   let currentY = yPosition;
   let currentLineSegments = [];
+  let currentBulletIndent = 0;
 
-  segments.forEach((segment) => {
+  segments.forEach((segment, index) => {
     // Handle newlines
     if (segment.isNewline) {
       if (currentLineSegments.length > 0) {
@@ -146,12 +242,21 @@ export const addFormattedText = (pdf, segments, xPosition, yPosition, maxWidth, 
           lineHeight,
           fontSize,
           color,
-          segment.isBullet ? 5 : 0,
+          currentBulletIndent,
           pageHeight
         );
         currentLineSegments = [];
+        currentBulletIndent = 0; // Reset bullet indent after rendering
+      } else {
+        // Empty line - add spacing for paragraph break
+        currentY += lineHeight;
       }
       return;
+    }
+
+    // Track bullet indent from the segment
+    if (segment.isBullet) {
+      currentBulletIndent = segment.indent || 8;
     }
 
     currentLineSegments.push(segment);
@@ -168,7 +273,7 @@ export const addFormattedText = (pdf, segments, xPosition, yPosition, maxWidth, 
       lineHeight,
       fontSize,
       color,
-      0,
+      currentBulletIndent,
       pageHeight
     );
   }
@@ -191,30 +296,30 @@ const renderTextLine = (
   bulletIndent,
   pageHeight
 ) => {
-  let currentX = xPosition + bulletIndent;
-  let currentY = yPosition;
   const margin = 15;
+  let currentY = yPosition;
+  const startX = xPosition + bulletIndent;
+  let currentX = startX;
 
   // Add bullet point if needed
   if (bulletIndent > 0) {
     pdf.setFont(undefined, 'normal');
     pdf.setFontSize(baseFontSize);
-    pdf.setTextColor(...baseColor);
-    pdf.text('•', xPosition, currentY);
+    if (Array.isArray(baseColor)) {
+      pdf.setTextColor(...baseColor);
+    }
+    // Position bullet based on indent level
+    // Main bullets (8mm): position at xPosition + 2
+    // Sub-bullets (20mm): position at xPosition + 12 (more indented)
+    const bulletX = bulletIndent > 15 ? xPosition + 12 : xPosition + 2;
+    pdf.text('•', bulletX, currentY);
   }
 
-  // Render each segment
+  // Render each segment inline, wrapping as needed
   segments.forEach((segment) => {
     if (!segment.text) return;
 
-    // Check for page break
-    if (currentY > pageHeight - margin) {
-      pdf.addPage();
-      currentY = margin;
-      currentX = xPosition + bulletIndent;
-    }
-
-    // Set font properties
+    // Set font properties for this segment
     let fontStyle = 'normal';
     if (segment.bold && segment.italic) fontStyle = 'bolditalic';
     else if (segment.bold) fontStyle = 'bold';
@@ -232,17 +337,44 @@ const renderTextLine = (
       pdf.setTextColor(rgb.r, rgb.g, rgb.b);
     }
 
-    // Split text to fit width
-    const textLines = pdf.splitTextToSize(segment.text, maxWidth - bulletIndent - 5);
-
-    textLines.forEach((line, idx) => {
-      pdf.text(line, currentX, currentY);
-      if (idx < textLines.length - 1) {
+    // Split segment text by spaces for word wrapping
+    const words = segment.text.split(' ');
+    
+    words.forEach((word, wordIdx) => {
+      // Add space before word if not first word
+      const textToAdd = (wordIdx > 0 || currentX > startX) ? ' ' + word : word;
+      const textWidth = pdf.getTextWidth(textToAdd);
+      
+      // Check if text fits on current line
+      if (currentX + textWidth > xPosition + maxWidth - 5) {
+        // Move to next line
         currentY += lineHeight;
-        if (currentY > pageHeight - margin) {
+        currentX = startX;
+        
+        // Check for page break
+        if (currentY > pageHeight - margin - 10) {
           pdf.addPage();
           currentY = margin;
+          currentX = startX;
+          
+          // Re-add bullet if it was a bullet line
+          if (bulletIndent > 0) {
+            pdf.setFont(undefined, 'normal');
+            if (Array.isArray(baseColor)) {
+              pdf.setTextColor(...baseColor);
+            }
+            pdf.text('•', xPosition + 2, currentY);
+            pdf.setFont(undefined, fontStyle); // Restore font style
+          }
         }
+        
+        // Render word without leading space on new line
+        pdf.text(word, currentX, currentY);
+        currentX += pdf.getTextWidth(word);
+      } else {
+        // Render word on current line
+        pdf.text(textToAdd, currentX, currentY);
+        currentX += textWidth;
       }
     });
   });

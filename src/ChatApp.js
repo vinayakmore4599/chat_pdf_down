@@ -298,6 +298,189 @@ These recommendations align with our *quarterly growth targets* and should resul
 Success will be measured against *baseline metrics* established in Q2 and tracked through our **monthly business reviews**.`
         }
       ]
+    },
+    {
+      id: 'msg-9',
+      type: 'question',
+      content: 'Give me a comprehensive test report with all possible content types?'
+    },
+    {
+      id: 'resp-9',
+      type: 'response',
+      question: 'Give me a comprehensive test report with all possible content types?',
+      answer: 'This is a comprehensive test case that includes all supported content types: bar charts, line charts, pie charts, tables, formatted text with bold and italic, bullet points, sub-bullet points, new lines, tabs, and emojis.',
+      sections: [
+        {
+          type: 'text',
+          id: 'test-intro',
+          heading: '📋 Comprehensive Test Report',
+          isFormatted: true,
+          content: `This test demonstrates **all supported features** for PDF generation:
+
+• **Text Formatting**: Bold, italic, and *mixed styles*
+• **Charts**: Bar charts, line charts, and pie charts
+• **Tables**: With word wrapping and proper styling
+• **Special Characters**: Emojis 🎯 💼 📊 and symbols
+• **Layout**: Proper spacing, headings, and sections
+
+The following sections will test each feature individually and in combination.`
+        },
+        {
+          type: 'chart',
+          id: 'test-bar-chart',
+          heading: '📊 Bar Chart Example',
+          data: [
+            { name: 'Category A', value: 4500 },
+            { name: 'Category B', value: 3800 },
+            { name: 'Category C', value: 4200 },
+            { name: 'Category D', value: 3200 },
+            { name: 'Category E', value: 4800 }
+          ],
+          chartType: 'bar'
+        },
+        {
+          type: 'chart',
+          id: 'test-line-chart',
+          heading: '📈 Line Chart Example',
+          data: [
+            { name: 'Jan', value: 45000 },
+            { name: 'Feb', value: 52000 },
+            { name: 'Mar', value: 48000 },
+            { name: 'Apr', value: 61000 },
+            { name: 'May', value: 67000 },
+            { name: 'Jun', value: 72000 }
+          ],
+          chartType: 'line'
+        },
+        {
+          type: 'chart',
+          id: 'test-pie-chart',
+          heading: '🥧 Pie Chart Example',
+          data: [
+            { name: 'Product A', value: 35 },
+            { name: 'Product B', value: 25 },
+            { name: 'Product C', value: 20 },
+            { name: 'Product D', value: 15 },
+            { name: 'Product E', value: 5 }
+          ],
+          chartType: 'pie'
+        },
+        {
+          type: 'table',
+          id: 'test-table',
+          heading: '📑 Table Example with Long Text',
+          columns: ['Feature', 'Status', 'Priority', 'Description', 'Owner', 'Due Date', 'Notes'],
+          rows: [
+            ['Text Formatting', '✅ Complete', 'High', 'Bold, italic, and mixed formatting support with proper rendering', 'Team A', '2026-01-15', 'All tests passing'],
+            ['Bar Charts', '✅ Complete', 'High', 'Vertical bar charts with customizable colors and data labels', 'Team B', '2026-01-10', 'Integrated with html2canvas'],
+            ['Line Charts', '✅ Complete', 'High', 'Time series and trend visualization with smooth curves', 'Team B', '2026-01-10', 'Supports multiple series'],
+            ['Pie Charts', '✅ Complete', 'Medium', 'Percentage distribution with automatic label positioning and color coding', 'Team C', '2026-01-20', 'New feature'],
+            ['Tables', '✅ Complete', 'High', 'Native PDF tables with word wrapping, styling, and automatic page breaks', 'Team A', '2026-01-18', 'Uses jspdf-autotable'],
+            ['Emojis', '✅ Complete', 'Low', 'Emoji to text conversion for PDF compatibility', 'Team D', '2026-01-12', 'Fallback rendering']
+          ]
+        },
+        {
+          type: 'text',
+          id: 'test-bullets',
+          heading: '🎯 Bullet Points and Sub-bullets',
+          isFormatted: true,
+          content: `**Main Features:**
+
+• **PDF Generation**
+\t• Support for multiple page layouts
+\t• Automatic page breaks
+\t• Custom headers and footers
+\t• Timestamp and metadata
+
+• **Content Types**
+\t• Formatted text with **bold** and *italic*
+\t• Multiple chart types
+\t• Native tables with styling
+\t• Mixed content in single document
+
+• **Formatting Options**
+\t• Bullet points (main level)
+\t• Sub-bullet points (indented)
+\t• New lines and spacing
+\t• Tab indentation
+\t• Special characters and emojis
+
+• **Quality Features**
+\t• Word wrapping in tables
+\t• Automatic column sizing
+\t• Color coding and themes
+\t• Professional styling`
+        },
+        {
+          type: 'text',
+          id: 'test-advanced-formatting',
+          heading: '✍️ Advanced Text Formatting',
+          isFormatted: true,
+          content: `This section tests **advanced formatting capabilities**:
+
+**1. Mixed Styles in Same Line:**
+This is *italic text* followed by **bold text** and then *both **bold and italic*** together.
+
+**2. Multiple Paragraphs:**
+
+First paragraph with important information that spans multiple lines and demonstrates proper line wrapping and spacing in the PDF output.
+
+Second paragraph showing that **new lines** are properly handled and spacing is maintained between paragraphs for readability.
+
+**3. Emoji Integration:**
+🎯 Strategic planning
+💼 Business operations
+📊 Data analysis
+📈 Growth metrics
+✅ Completed tasks
+⚠️ Important warnings
+
+**4. Special Formatting:**
+• *Italic bullets* for emphasis
+• **Bold bullets** for importance
+• Regular bullets for standard items
+\t• Sub-item with indentation
+\t• Another sub-item
+• Back to main level
+
+**Conclusion:** All formatting features work seamlessly together!`
+        },
+        {
+          type: 'text',
+          id: 'test-line-breaks',
+          heading: '📐 Line Breaks and Spacing Test',
+          isFormatted: true,
+          content: `Testing various spacing scenarios:
+
+Line 1: Single new line above
+
+
+Line 2: Double new line above (paragraph spacing)
+
+• Bullet after spacing
+• Another bullet
+
+Final line with proper spacing.`
+        },
+        {
+          type: 'text',
+          id: 'test-summary',
+          heading: '🏆 Test Summary',
+          isFormatted: true,
+          content: `**Test Results:**
+
+✅ All chart types render correctly (Bar, Line, Pie)
+✅ Tables support word wrapping and fit within page width
+✅ Text formatting preserves **bold** and *italic* styles
+✅ Bullet points and sub-bullets display with proper indentation
+✅ Emojis convert to readable text equivalents
+✅ New lines and spacing work as expected
+✅ Mixed content sections maintain proper layout
+✅ Headers and sections have consistent styling
+
+**Overall Status:** All features tested and working perfectly! 🎉`
+        }
+      ]
     }
   ];
 
