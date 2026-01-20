@@ -13,6 +13,8 @@ import {
 } from 'recharts';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { parseFormattedText, addFormattedText } from '../utils/pdfTextFormatter';
 import '../styles/ChatResponse.css';
 
 const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'bar', charts = [], sections = [] }) => {
@@ -73,8 +75,71 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
           const section = sectionsToRender[i];
           const sectionRefElement = sectionRefs.current[section.id];
 
-          if (section.type === 'text') {
-            // Handle text section
+          if (section.type === 'text' && sectionRefElement) {
+            // Handle text section - check if it has rich formatting
+            if (section.isFormatted) {
+              // Render as formatted text with styling
+              if (yPosition > pageHeight - 30) {
+                pdf.addPage();
+                yPosition = 15;
+              }
+
+              // Add heading if provided
+              if (section.heading) {
+                pdf.setFontSize(12);
+                pdf.setFont(undefined, 'bold');
+                pdf.setTextColor(0);
+                pdf.text(section.heading, margin, yPosition);
+                yPosition += 10;
+              }
+
+              // Parse and render formatted text
+              const segments = parseFormattedText(section.content);
+              yPosition = addFormattedText(
+                pdf,
+                segments,
+                margin,
+                yPosition,
+                maxWidth,
+                {
+                  lineHeight: 6,
+                  fontSize: 10,
+                  color: [0, 0, 0],
+                  pageHeight,
+                }
+              );
+              yPosition += 5;
+            } else {
+              // Render as image to preserve complex styling
+              if (yPosition > pageHeight - 50) {
+                pdf.addPage();
+                yPosition = 15;
+              }
+
+              // Capture text section as image
+              const textCanvas = await html2canvas(sectionRefElement, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+              });
+
+              const textImgData = textCanvas.toDataURL('image/png');
+              const textWidth = maxWidth;
+              const textHeight = (textCanvas.height * textWidth) / textCanvas.width;
+
+              // Check if content fits on current page
+              if (yPosition + textHeight > pageHeight - 15) {
+                pdf.addPage();
+                yPosition = 15;
+              }
+
+              pdf.addImage(textImgData, 'PNG', margin, yPosition, textWidth, textHeight);
+              yPosition += textHeight + 10;
+            }
+          } else if (section.type === 'text') {
+            // Text section without ref - render as formatted text
             if (yPosition > pageHeight - 30) {
               pdf.addPage();
               yPosition = 15;
@@ -82,56 +147,74 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
 
             // Add heading if provided
             if (section.heading) {
-              pdf.setFontSize(11);
-              pdf.setFont(undefined, 'bold');
-              pdf.setTextColor(0);
-              pdf.text(section.heading, margin, yPosition);
-              yPosition += 8;
-            }
-
-            // Add text content
-            pdf.setFont(undefined, 'normal');
-            pdf.setFontSize(10);
-            const textLines = pdf.splitTextToSize(section.content, maxWidth);
-            pdf.text(textLines, margin, yPosition);
-            yPosition += textLines.length * lineHeight + 10;
-          } else if (section.type === 'chart' && sectionRefElement) {
-            // Handle chart section
-            if (yPosition > pageHeight - 100) {
-              pdf.addPage();
-              yPosition = 15;
-            }
-
-            // Add chart heading
-            if (section.heading) {
-              pdf.setFontSize(11);
+              pdf.setFontSize(12);
               pdf.setFont(undefined, 'bold');
               pdf.setTextColor(0);
               pdf.text(section.heading, margin, yPosition);
               yPosition += 10;
             }
 
-            // Capture chart as image
-            const chartCanvas = await html2canvas(sectionRefElement, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              backgroundColor: '#ffffff',
-              logging: false,
-            });
-
-            const chartImgData = chartCanvas.toDataURL('image/png');
-            const chartWidth = maxWidth;
-            const chartHeight = (chartCanvas.height * chartWidth) / chartCanvas.width;
-
-            // Check if chart fits on current page
-            if (yPosition + chartHeight > pageHeight - 15) {
+            // Parse and render formatted text
+            const segments = parseFormattedText(section.content);
+            yPosition = addFormattedText(
+              pdf,
+              segments,
+              margin,
+              yPosition,
+              maxWidth,
+              {
+                lineHeight: 6,
+                fontSize: 10,
+                color: [0, 0, 0],
+                pageHeight,
+              }
+            );
+            yPosition += 5;
+          } else if (section.type === 'table') {
+            // Handle table section - render as native PDF table
+            if (yPosition > pageHeight - 100) {
               pdf.addPage();
               yPosition = 15;
             }
 
-            pdf.addImage(chartImgData, 'PNG', margin, yPosition, chartWidth, chartHeight);
-            yPosition += chartHeight + 10;
+            // Add table heading if provided
+            if (section.heading) {
+              pdf.setFontSize(12);
+              pdf.setFont(undefined, 'bold');
+              pdf.setTextColor(0);
+              pdf.text(section.heading, margin, yPosition);
+              yPosition += 10;
+            }
+
+            // Render table using autoTable
+            if (section.rows && section.columns) {
+              try {
+                console.warn('ATTEMPTING TABLE RENDER with columns:', section.columns);
+                console.warn('TABLE DATA:', section.rows);
+                
+                // Call autoTable
+                pdf.autoTable({
+                  startY: yPosition,
+                  head: [section.columns],
+                  body: section.rows,
+                });
+
+                console.warn('TABLE RENDER SUCCESSFUL');
+                console.warn('lastAutoTable:', pdf.lastAutoTable);
+                
+                // Get the final Y position after table
+                if (pdf.lastAutoTable && pdf.lastAutoTable.finalY) {
+                  yPosition = pdf.lastAutoTable.finalY + 10;
+                } else {
+                  yPosition += 100; // Fallback
+                }
+              } catch (tableError) {
+                console.error('ERROR RENDERING TABLE:', tableError);
+                yPosition += 50;
+              }
+            } else {
+              console.warn('TABLE SECTION HAS NO ROWS OR COLUMNS', { hasRows: !!section.rows, hasColumns: !!section.columns });
+            }
           }
         }
       }
@@ -146,7 +229,9 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
       pdf.save(`chat-response-${timestamp}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      alert(`Failed to generate PDF: ${error.message}`);
     } finally {
       setIsDownloading(false);
     }
@@ -210,9 +295,48 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
             {sectionsToRender.map((section) => (
               <div key={section.id} className={`section section-${section.type}`}>
                 {section.type === 'text' && (
-                  <div className="text-section">
+                  <div 
+                    className="text-section" 
+                    ref={(el) => {
+                      if (el) sectionRefs.current[section.id] = el;
+                    }}
+                  >
                     {section.heading && <h3 className="section-heading">{section.heading}</h3>}
                     <p className="section-text">{section.content}</p>
+                  </div>
+                )}
+
+                {section.type === 'table' && (
+                  <div 
+                    className="table-section" 
+                    ref={(el) => {
+                      if (el) sectionRefs.current[section.id] = el;
+                    }}
+                  >
+                    {section.heading && <h3 className="table-title">{section.heading}</h3>}
+                    {section.tableHtml && (
+                      <div className="table-wrapper" dangerouslySetInnerHTML={{ __html: section.tableHtml }} />
+                    )}
+                    {section.rows && !section.tableHtml && (
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            {section.columns.map((col, idx) => (
+                              <th key={idx}>{col}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {section.rows.map((row, rowIdx) => (
+                            <tr key={rowIdx}>
+                              {row.map((cell, cellIdx) => (
+                                <td key={cellIdx}>{cell}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
                 )}
 

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ChatMessage from './components/ChatMessage';
 import ChatResponse from './components/ChatResponse';
 import './styles/ChatApp.css';
 
 const ChatApp = () => {
-  const [messages, setMessages] = useState([
+  const messages = [
     {
       id: 'msg-1',
       type: 'question',
@@ -191,8 +191,115 @@ const ChatApp = () => {
           content: 'The analysis demonstrates robust business health with positive market indicators across all key metrics. Revenue shows consistent upward trajectory with slight seasonal dips appropriately managed. Based on current performance and market trends, we project continued 15-20% quarterly growth. Strategic recommendations include expanding West region presence, accelerating Product B initiatives, and developing East region market penetration strategies. All regions show positive momentum with strong fundamentals supporting sustained growth outlook.'
         }
       ]
+    },
+    {
+      id: 'msg-7',
+      type: 'question',
+      content: 'Show me the sales performance table?'
+    },
+    {
+      id: 'resp-7',
+      type: 'response',
+      question: 'Show me the sales performance table?',
+      answer: 'Here is a detailed sales performance table showing quarterly metrics across all regions and products.',
+      sections: [
+        {
+          type: 'text',
+          id: 'table-intro',
+          heading: '📊 Sales Performance Overview',
+          content: 'The following table presents comprehensive sales data for Q2 across all regions and product categories. This data includes actual sales figures, growth percentages, and target achievement rates. All figures are in USD thousands.'
+        },
+        {
+          type: 'table',
+          id: 'sales-table',
+          heading: '💼 Quarterly Sales Summary',
+          columns: ['Region', 'Product A', 'Product B', 'Product C', 'Total', 'Growth %', 'Target Achievement'],
+          rows: [
+            ['North', '$5,300K', '$4,200K', '$2,100K', '$11,600K', '18.5%', '116%'],
+            ['Central', '$4,500K', '$3,600K', '$1,800K', '$9,900K', '15.2%', '110%'],
+            ['South', '$5,100K', '$4,000K', '$2,050K', '$11,150K', '16.8%', '115%'],
+            ['East', '$3,900K', '$2,800K', '$1,400K', '$8,100K', '12.3%', '95%'],
+            ['West', '$5,700K', '$4,500K', '$2,200K', '$12,400K', '20.1%', '120%'],
+            ['Total', '$24,500K', '$19,100K', '$9,550K', '$53,150K', '16.6%', '111%']
+          ]
+        },
+        {
+          type: 'text',
+          id: 'table-analysis',
+          heading: '📈 Key Insights',
+          content: 'West region shows exceptional performance achieving 120% of target with 20.1% growth. North and South regions also exceed targets at 116% and 115% respectively. East region, while below target at 95%, still shows positive growth of 12.3%, indicating emerging market opportunity. Overall portfolio achieves 111% of combined targets with 16.6% growth, demonstrating strong market momentum and successful execution of regional strategies.'
+        }
+      ]
+    },
+    {
+      id: 'msg-8',
+      type: 'question',
+      content: 'What are the key recommendations and action items?'
+    },
+    {
+      id: 'resp-8',
+      type: 'response',
+      question: 'What are the key recommendations and action items?',
+      answer: 'Here are the strategic recommendations and action items based on our comprehensive analysis.',
+      sections: [
+        {
+          type: 'text',
+          id: 'strategic-overview',
+          heading: '🎯 Strategic Recommendations',
+          isFormatted: true,
+          content: `Based on our comprehensive market analysis, we recommend the following strategic initiatives:
+
+• **Expand West Region Operations** - Leverage exceptional 120% target achievement with increased investment in market penetration and customer acquisition
+
+• **Accelerate Product B Development** - Product B demonstrates strong growth trajectory at 7,800K with potential to close gap with Product A
+
+• **Develop East Region Strategy** - Although currently at 95% target achievement, East region shows 12.3% growth indicating significant untapped potential
+
+• **Optimize Resource Allocation** - Reallocate resources from stable regions to high-growth opportunities while maintaining service quality
+
+These recommendations align with our *quarterly growth targets* and should result in **15-20% accelerated growth** in Q3.`
+        },
+        {
+          type: 'text',
+          id: 'action-items',
+          heading: '📋 Implementation Action Items',
+          isFormatted: true,
+          content: `Priority actions for next quarter:
+
+• **Q3 Week 1-2**: Establish West region expansion task force and define growth targets
+
+• **Q3 Week 2-3**: Launch Product B marketing campaign targeting key customer segments
+
+• **Q3 Week 3-4**: Conduct East region market research and identify partnership opportunities
+
+• **Q3 Month 2**: Roll out training program for sales team on new products and strategies
+
+• **Q3 Month 2-3**: Monitor KPIs and adjust strategies based on *early performance metrics*
+
+**Expected Outcomes**: Achieve 18-22% quarterly growth with balanced regional expansion and product portfolio optimization`
+        },
+        {
+          type: 'text',
+          id: 'success-metrics',
+          heading: '📊 Success Metrics & KPIs',
+          isFormatted: true,
+          content: `Track the following metrics to measure success:
+
+• **Revenue Growth**: Target 18-22% quarter-over-quarter growth across all regions
+
+• **Regional Performance**: West region should achieve 125% of target, others maintain 110%+ performance
+
+• **Product Mix**: Product B revenue should reach 85% of Product A levels by end of Q3
+
+• **Market Penetration**: East region should exceed 105% of target with new partnership channels
+
+• **Customer Retention**: Maintain 95%+ customer retention rate while expanding base
+
+Success will be measured against *baseline metrics* established in Q2 and tracked through our **monthly business reviews**.`
+        }
+      ]
     }
-  ]);
+  ];
 
   return (
     <div className="chat-app-wrapper">
