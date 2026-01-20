@@ -1,0 +1,170 @@
+/* ChatResponse.css */
+
+.chat-response-container {
+  margin: 16px 0;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Content to be captured in PDF */
+.chat-response-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Question Section */
+.chat-question-section {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #667eea;
+}
+
+.question-label {
+  font-size: 0.85em;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.question-text {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Answer Section */
+.chat-answer-section {
+  margin: 24px 0;
+  padding: 16px;
+  background: #f0f4f8;
+  border-left: 4px solid #667eea;
+  border-radius: 4px;
+}
+
+.answer-label {
+  font-size: 0.85em;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.answer-text {
+  font-size: 1em;
+  color: #555;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Chart Section */
+.chart-section {
+  margin: 28px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.chart-title {
+  font-size: 1.05em;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Message Metadata */
+.message-metadata {
+  font-size: 0.85em;
+  color: #999;
+  text-align: right;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.timestamp {
+  display: inline-block;
+}
+
+/* Download Button - OUTSIDE captured area */
+.download-message-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 0 0 8px 8px;
+}
+
+.download-message-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f92 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.download-message-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.download-message-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.download-message-btn.downloading {
+  background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+}
+
+/* Ensure download button doesn't appear in PDF */
+@media print {
+  .download-message-btn {
+    display: none;
+  }
+
+  .chat-response-container {
+    box-shadow: none;
+    border: none;
+    background: white;
+  }
+
+  .chat-response-content {
+    padding: 0;
+    border-radius: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chat-response-content {
+    padding: 16px;
+  }
+
+  .question-text {
+    font-size: 1em;
+  }
+
+  .answer-text {
+    font-size: 0.95em;
+  }
+
+  .chart-section {
+    margin: 20px 0;
+    padding: 12px;
+  }
+}
