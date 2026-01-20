@@ -12,3 +12,4 @@ const ChatMessage = ({ question }) => {
 };
 
 export default ChatMessage;
+
