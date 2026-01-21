@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -38,8 +38,37 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
   const sectionRefs = useRef({});
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Determine what to render: sections (new) > charts (legacy multiple) > chartData (legacy single)
-  const sectionsToRender = sections.length > 0 ? sections : (charts.length > 0 ? charts.map((chart, i) => ({ type: 'chart', id: `chart-${i}`, heading: `Data Visualization ${i + 1}`, ...chart })) : (chartData ? [{ type: 'chart', id: 'chart-0', heading: 'Data Visualization', data: chartData, chartType }] : []));
+  // Create base sections from various input formats
+  const baseSections = useMemo(() => {
+    if (sections.length > 0) {
+      return sections;
+    } else if (charts.length > 0) {
+      return charts.map((chart, i) => ({
+        type: 'chart',
+        id: `chart-${i}`,
+        heading: `Data Visualization ${i + 1}`,
+        ...chart
+      }));
+    } else if (chartData) {
+      return [{
+        type: 'chart',
+        id: 'chart-0',
+        heading: 'Data Visualization',
+        data: chartData,
+        chartType
+      }];
+    }
+    return [];
+  }, [sections, charts, chartData, chartType]);
+
+  // CRITICAL FIX: Make section IDs unique by prefixing with responseId
+  // This prevents refs from being overwritten when multiple ChatResponse components exist
+  const sectionsToRender = useMemo(() => {
+    return baseSections.map(section => ({
+      ...section,
+      id: `${responseId}-${section.id}` // Ensures global uniqueness across all chat responses
+    }));
+  }, [baseSections, responseId]);
 
   // Convert formatted text to HTML for display
   const formatTextToHTML = (text) => {
@@ -158,7 +187,14 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
           const section = sectionsToRender[i];
           const sectionRefElement = sectionRefs.current[section.id];
           
-          console.log('Processing section:', section.type, section.id, 'Has ref:', !!sectionRefElement);
+          console.log('Processing section:', {
+            type: section.type,
+            id: section.id,
+            hasRef: !!sectionRefElement,
+            elementType: sectionRefElement?.tagName,
+            elementClass: sectionRefElement?.className,
+            elementText: sectionRefElement?.textContent?.substring(0, 50)
+          });
 
           if (section.type === 'text' && sectionRefElement) {
             // Handle text section - check if it has rich formatting
@@ -420,8 +456,8 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
       pdf.setTextColor(150);
       pdf.text(`Generated on ${new Date().toLocaleString()}`, margin, pageHeight - 10);
 
-      const timestamp = new Date().toISOString().slice(0, 10);
-      pdf.save(`chat-response-${timestamp}.pdf`);
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      pdf.save(`chat-${responseId}-${timestamp}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       console.error('Error message:', error.message);
@@ -662,14 +698,16 @@ const ChatResponse = ({ responseId, question, answer, chartData, chartType = 'ba
                 )}
 
                 {section.type === 'chart' && (
-                  <div 
-                    className="chart-section" 
-                    ref={(el) => {
-                      if (el) sectionRefs.current[section.id] = el;
-                    }}
-                  >
+                  <div className="chart-section">
                     {section.heading && <div className="chart-title">{section.heading}</div>}
-                    {renderChart(section.data, section.chartType || 'bar')}
+                    <div 
+                      ref={(el) => {
+                        if (el) sectionRefs.current[section.id] = el;
+                      }}
+                      className="chart-capture-container"
+                    >
+                      {renderChart(section.data, section.chartType || 'bar')}
+                    </div>
                   </div>
                 )}
               </div>
